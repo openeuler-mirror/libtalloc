@@ -1,0 +1,39 @@
+From eabe6d534c5c8c6ca38f3dc846f17aad6395da8c Mon Sep 17 00:00:00 2001
+From: Andreas Schneider <asn@samba.org>
+Date: Thu, 22 Nov 2018 16:10:39 +0100
+Subject: [PATCH 09/28] lib:talloc: Fix undefined behavior in talloc_memdup
+
+lib/talloc/talloc.c:2419: runtime error: null pointer passed as argument
+2, which is declared to never be null
+
+Signed-off-by: Andreas Schneider <asn@samba.org>
+Reviewed-by: Volker Lendecke <vl@samba.org>
+Signed-off-by: root <root@localhost.localdomain>
+---
+ talloc.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/talloc.c b/talloc.c
+index 54be63495ae..073a3e50d4b 100644
+--- a/talloc.c
++++ b/talloc.c
+@@ -2413,9 +2413,14 @@ _PUBLIC_ void *_talloc_zero(const void *ctx, size_t size, const char *name)
+ */
+ _PUBLIC_ void *_talloc_memdup(const void *t, const void *p, size_t size, const char *name)
+ {
+-	void *newp = _talloc_named_const(t, size, name);
++	void *newp = NULL;
+ 
+-	if (likely(newp)) {
++	if (likely(size > 0) && unlikely(p == NULL)) {
++		return NULL;
++	}
++
++	newp = _talloc_named_const(t, size, name);
++	if (likely(newp != NULL) && likely(size > 0)) {
+ 		memcpy(newp, p, size);
+ 	}
+ 
+-- 
+2.19.1
+
