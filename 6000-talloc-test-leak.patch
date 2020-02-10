@@ -1,0 +1,222 @@
+From 616646a0c4c5709ab334a11907642e710f912697 Mon Sep 17 00:00:00 2001
+From: Swen Schillig <swen@linux.ibm.com>
+Date: Thu, 15 Aug 2019 14:22:46 +0200
+Subject: [PATCH 1/5] talloc: ASAN fix for test_realloc_on_destructor_parent
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Direct leak of 96 byte(s) in 1 object(s) allocated from:
+    #0 0x7fd52c00dc08 in __interceptor_malloc (/lib64/libasan.so.5+0xefc08)
+    #1 0x7fd52befec45 in __talloc_with_prefix ../../talloc.c:782
+    #2 0x7fd52befec45 in __talloc ../../talloc.c:824
+    #3 0x7fd52befec45 in _talloc_named_const ../../talloc.c:981
+    #4 0x7fd52befec45 in talloc_named_const ../../talloc.c:1748
+    #5 0x4099bd in test_realloc_on_destructor_parent ../../testsuite.c:1000
+    #6 0x4099bd in torture_local_talloc ../../testsuite.c:2129
+    #7 0x402603 in main ../../testsuite_main.c:32
+    #8 0x7fd52bcb8412 in __libc_start_main (/lib64/libc.so.6+0x24412)
+
+Signed-off-by: Swen Schillig <swen@linux.ibm.com>
+Reviewed-by: Andrew Bartlett <abartlet@samba.org>
+Reviewed-by: Matthias Dieter Wallnöfer <mdw@samba.org>
+---
+ testsuite.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/testsuite.c b/testsuite.c
+index a76a64716c8f5378c96c606d12c4e9deb691d94a..9e340827e88e7779b24b65dffd0e2d8d4f9a46f0 100644
+--- a/testsuite.c
++++ b/testsuite.c
+@@ -1035,6 +1035,8 @@ static bool test_realloc_on_destructor_parent(void)
+ 
+ 
+ 	printf("success: free_for_exit\n");
++	talloc_free(top); /* make ASAN happy */
++
+ 	return true;
+ }
+ 
+-- 
+2.23.0.rc2
+
+
+From 878e804df6377ffa120ae62b9abb182c957c10a6 Mon Sep 17 00:00:00 2001
+From: Swen Schillig <swen@linux.ibm.com>
+Date: Thu, 15 Aug 2019 14:33:32 +0200
+Subject: [PATCH 2/5] talloc: ASAN fix for test_talloc_free_in_destructor
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Indirect leak of 104 byte(s) in 1 object(s) allocated from:
+    #0 0x7f06393dfc08 in __interceptor_malloc (/lib64/libasan.so.5+0xefc08)
+    #1 0x7f06392d0c45 in __talloc_with_prefix ../../talloc.c:782
+    #2 0x7f06392d0c45 in __talloc ../../talloc.c:824
+    #3 0x7f06392d0c45 in _talloc_named_const ../../talloc.c:981
+    #4 0x7f06392d0c45 in talloc_named_const ../../talloc.c:1748
+    #5 0x409edd in test_talloc_free_in_destructor ../../testsuite.c:1256
+    #6 0x409edd in torture_local_talloc ../../testsuite.c:2138
+    #7 0x402603 in main ../../testsuite_main.c:32
+    #8 0x7f063908a412 in __libc_start_main (/lib64/libc.so.6+0x24412)
+
+Signed-off-by: Swen Schillig <swen@linux.ibm.com>
+Reviewed-by: Andrew Bartlett <abartlet@samba.org>
+Reviewed-by: Matthias Dieter Wallnöfer <mdw@samba.org>
+---
+ testsuite.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/testsuite.c b/testsuite.c
+index 9e340827e88e7779b24b65dffd0e2d8d4f9a46f0..c119884fd55391d90e74f60322c78776f9730609 100644
+--- a/testsuite.c
++++ b/testsuite.c
+@@ -1266,6 +1266,8 @@ static bool test_talloc_free_in_destructor(void)
+ 
+ 	talloc_free(level0);
+ 
++	talloc_free(level3); /* make ASAN happy */
++
+ 	printf("success: free_in_destructor\n");
+ 	return true;
+ }
+-- 
+2.23.0.rc2
+
+
+From 6c3e8a0a9f0636467af5678c04d5aecc9c3dbf7a Mon Sep 17 00:00:00 2001
+From: Swen Schillig <swen@linux.ibm.com>
+Date: Thu, 15 Aug 2019 14:36:59 +0200
+Subject: [PATCH 3/5] talloc: ASAN fix for test_pool_nest
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Direct leak of 96 byte(s) in 1 object(s) allocated from:
+    #0 0x7f06393dfc08 in __interceptor_malloc (/lib64/libasan.so.5+0xefc08)
+    #1 0x7f06392d0c45 in __talloc_with_prefix ../../talloc.c:782
+    #2 0x7f06392d0c45 in __talloc ../../talloc.c:824
+    #3 0x7f06392d0c45 in _talloc_named_const ../../talloc.c:981
+    #4 0x7f06392d0c45 in talloc_named_const ../../talloc.c:1748
+    #5 0x40901e in test_pool_nest ../../testsuite.c:1451
+    #6 0x40901e in torture_local_talloc ../../testsuite.c:2096
+    #7 0x402603 in main ../../testsuite_main.c:32
+    #8 0x7f063908a412 in __libc_start_main (/lib64/libc.so.6+0x24412)
+
+Signed-off-by: Swen Schillig <swen@linux.ibm.com>
+Reviewed-by: Andrew Bartlett <abartlet@samba.org>
+Reviewed-by: Matthias Dieter Wallnöfer <mdw@samba.org>
+---
+ testsuite.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/testsuite.c b/testsuite.c
+index c119884fd55391d90e74f60322c78776f9730609..d936d18c2ae434686a29e58bff308afc1bc51133 100644
+--- a/testsuite.c
++++ b/testsuite.c
+@@ -1468,6 +1468,8 @@ static bool test_pool_nest(void)
+ 
+ 	talloc_free(p1);
+ 
++	talloc_free(e); /* make ASAN happy */
++
+ 	return true;
+ }
+ 
+-- 
+2.23.0.rc2
+
+
+From d0933ec62c113a6da5209a556fad8819febe4ec2 Mon Sep 17 00:00:00 2001
+From: Swen Schillig <swen@linux.ibm.com>
+Date: Thu, 15 Aug 2019 14:39:58 +0200
+Subject: [PATCH 4/5] talloc: ASAN fix for test_rusty
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Direct leak of 100 byte(s) in 1 object(s) allocated from:
+     #0 0x7f06393dfc08 in __interceptor_malloc (/lib64/libasan.so.5+0xefc08)
+     #1 0x7f06392d1af3 in __talloc_with_prefix ../../talloc.c:782
+     #2 0x7f06392d1af3 in __talloc ../../talloc.c:824
+     #3 0x7f06392d1af3 in __talloc_strlendup ../../talloc.c:2455
+     #4 0x7f06392d1af3 in talloc_strdup ../../talloc.c:2471
+     #5 0x40b4f0 in test_rusty ../../testsuite.c:1543
+     #6 0x40b4f0 in torture_local_talloc ../../testsuite.c:2146
+     #7 0x402603 in main ../../testsuite_main.c:32
+     #8 0x7f063908a412 in __libc_start_main (/lib64/libc.so.6+0x24412)
+
+Signed-off-by: Swen Schillig <swen@linux.ibm.com>
+Reviewed-by: Andrew Bartlett <abartlet@samba.org>
+Reviewed-by: Matthias Dieter Wallnöfer <mdw@samba.org>
+---
+ testsuite.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/testsuite.c b/testsuite.c
+index d936d18c2ae434686a29e58bff308afc1bc51133..ffede68f52a1d3ffb535ea7bab2825483ec2b470 100644
+--- a/testsuite.c
++++ b/testsuite.c
+@@ -1540,7 +1540,7 @@ static bool test_free_ref_null_context(void)
+ static bool test_rusty(void)
+ {
+ 	void *root;
+-	const char *p1;
++	char *p1;
+ 
+ 	talloc_enable_null_tracking();
+ 	root = talloc_new(NULL);
+@@ -1549,6 +1549,8 @@ static bool test_rusty(void)
+ 	talloc_report_full(root, stdout);
+ 	talloc_free(root);
+ 	CHECK_BLOCKS("null_context", NULL, 2);
++	talloc_free(p1); /* make ASAN happy */
++
+ 	return true;
+ }
+ 
+-- 
+2.23.0.rc2
+
+
+From fc4ad5b6dfdcfb859f92dcca868a043e31a051b0 Mon Sep 17 00:00:00 2001
+From: Swen Schillig <swen@linux.ibm.com>
+Date: Thu, 15 Aug 2019 14:43:22 +0200
+Subject: [PATCH 5/5] talloc: ASAN fix for test_magic_protection
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Direct leak of 1152 byte(s) in 1 object(s) allocated from:
+     #0 0x7f06393dfc08 in __interceptor_malloc (/lib64/libasan.so.5+0xefc08)
+     #1 0x7f06392cfd59 in __talloc_with_prefix ../../talloc.c:782
+     #2 0x7f06392cfd59 in _talloc_pool ../../talloc.c:837
+     #3 0x7f06392cfd59 in talloc_pool ../../talloc.c:859
+     #4 0x40b83c in test_magic_protection ../../testsuite.c:1960
+     #5 0x40b83c in torture_local_talloc ../../testsuite.c:2164
+     #6 0x402603 in main ../../testsuite_main.c:32
+     #7 0x7f063908a412 in __libc_start_main (/lib64/libc.so.6+0x24412)
+
+Signed-off-by: Swen Schillig <swen@linux.ibm.com>
+Reviewed-by: Andrew Bartlett <abartlet@samba.org>
+Reviewed-by: Matthias Dieter Wallnöfer <mdw@samba.org>
+---
+ testsuite.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/testsuite.c b/testsuite.c
+index ffede68f52a1d3ffb535ea7bab2825483ec2b470..aa5c771ea31e524c93fd42d97304b025f172b684 100644
+--- a/testsuite.c
++++ b/testsuite.c
+@@ -1999,6 +1999,8 @@ static bool test_magic_protection(void)
+ 
+ 	while (wait(&exit_status) != pid);
+ 
++	talloc_free(pool); /* make ASAN happy */
++
+ 	if (!WIFEXITED(exit_status)) {
+ 		printf("Child exited through unexpected abnormal means\n");
+ 		return false;
+-- 
+2.23.0.rc2
+
