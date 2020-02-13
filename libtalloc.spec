@@ -1,19 +1,16 @@
 Name:          libtalloc
-Version:       2.1.14
-Release:       4
+Version:       2.3.0
+Release:       0
 Summary:       A memory pool system
 License:       LGPLv3+
 URL:           https://talloc.samba.org/talloc/doc/html/index.html
-Source:        https://www.samba.org/ftp/talloc/talloc-%{version}.tar.gz
+Source0:       https://www.samba.org/ftp/talloc/talloc-%{version}.tar.gz
 
-Patch6000:     6000-lib-talloc-Fix-undefined-behavior-in-talloc_memdup.patch
-Patch6001:     6001-talloc-Fix-alignment-issues-for-casting-pointers.patch
+Patch0:        talloc-test-leak.patch
 
-BuildRequires: gcc git docbook-style-xsl python2-devel python3-devel doxygen
-
+BuildRequires: gcc git docbook-style-xsl python3-devel doxygen
 Provides:      bundled(libreplace)
-
-# Patches
+Obsoletes:     python2-talloc, python2-talloc-devel
 
 %description
 A hierarchical, reference counted memory pool system with destructors
@@ -32,29 +29,6 @@ Requires:       man
 %description    help
 This contains man files for the using of libtalloc
 
-
-%package       -n python2-talloc
-Summary:       Provide the python rely for libtalloc
-Requires:      libtalloc = %{version}-%{release}
-Provides:      pytalloc%{?_isa} = %{version}-%{release}
-Provides:      pytalloc = %{version}-%{release}
-Obsoletes:     pytalloc < 2.1.3
-%{?python_provide:%python_provide python2-talloc}
-
-%description   -n python2-talloc
-Provide the python 2 when using the libtalloc
-
-%package       -n python2-talloc-devel
-Summary:       Files for python2-talloc development
-Requires:      python2-talloc = %{version}-%{release}
-Provides:      pytalloc-devel%{?_isa} = %{version}-%{release}
-Provides:      pytalloc-devel = %{version}-%{release}
-Obsoletes:     pytalloc-devel < 2.1.3
-%{?python_provide:%python_provide python2-talloc-devel}
-
-%description   -n python2-talloc-devel
-Files for python2-talloc development
-
 %package       -n python3-talloc
 Summary:       Provide the python rely for libtalloc
 Requires:      libtalloc = %{version}-%{release}
@@ -72,19 +46,13 @@ Requires:      python3-talloc = %{version}-%{release}
 Files for python3-talloc development
 
 %prep
-%autosetup     -n talloc-%{version} -p1
+%autosetup -n talloc-%{version} -p1
 
 %build
 export python_LDFLAGS=""
 
-pathfix.py -n -p -i %{__python2} buildtools/bin/waf
-
-%configure --disable-rpath \
-           --disable-rpath-install \
-           --bundled-libraries=NONE \
-           --builtin-libraries=replace \
-           --disable-silent-rules \
-           --extra-python=%{__python3}
+%configure --disable-rpath --disable-rpath-install --bundled-libraries=NONE \
+           --builtin-libraries=replace --disable-silent-rules
 
 %make_build V=1
 doxygen doxy.config
@@ -113,16 +81,7 @@ cp -a doc/man/* $RPM_BUILD_ROOT/%{_mandir}
 %{_libdir}/pkgconfig/talloc.pc
 
 %files help
-%{_mandir}/man3/*
-
-%files -n python2-talloc
-%{_libdir}/libpytalloc-util.so.*
-%{python2_sitearch}/talloc.so
-
-%files -n python2-talloc-devel
-%{_includedir}/pytalloc.h
-%{_libdir}/pkgconfig/pytalloc-util.pc
-%{_libdir}/libpytalloc-util.so
+%{_mandir}/man*/*
 
 %files -n python3-talloc
 %{_libdir}/libpytalloc-util.cpython*.so.*
@@ -134,12 +93,15 @@ cp -a doc/man/* $RPM_BUILD_ROOT/%{_mandir}
 %{_libdir}/libpytalloc-util.cpython*.so
 
 %ldconfig_scriptlets
-
-%ldconfig_scriptlets -n python2-talloc
-
 %ldconfig_scriptlets -n python3-talloc
 
 %changelog
+* Mon Feb 10 2020 Ruijun Ge <geruijun@huawei.com> - 2.3.0-0
+- Type:enhancement
+- ID:NA
+- SUG:NA
+- DESC:update package
+
 * Tue Sep 3 2019 shidongdong <shidongdong5@huawei.com> - 2.1.14-4
 - Type:enhancement
 - ID:NA
