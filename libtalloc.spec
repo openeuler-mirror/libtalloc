@@ -1,12 +1,10 @@
 Name:          libtalloc
-Version:       2.3.0
-Release:       0
+Version:       2.3.1
+Release:       1
 Summary:       A memory pool system
 License:       LGPLv3+
 URL:           https://talloc.samba.org/talloc/doc/html/index.html
 Source0:       https://www.samba.org/ftp/talloc/talloc-%{version}.tar.gz
-
-Patch0:        talloc-test-leak.patch
 
 BuildRequires: gcc git docbook-style-xsl python3-devel doxygen
 Provides:      bundled(libreplace)
@@ -96,6 +94,9 @@ cp -a doc/man/* $RPM_BUILD_ROOT/%{_mandir}
 %ldconfig_scriptlets -n python3-talloc
 
 %changelog
+* Thu Jul 30 2020 yanglongkang <yanglongkang@huawei.com> - 2.3.1-1
+- update to 2.3.1 version
+
 * Mon Feb 10 2020 Ruijun Ge <geruijun@huawei.com> - 2.3.0-0
 - Type:enhancement
 - ID:NA
