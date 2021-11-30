@@ -1,5 +1,5 @@
 Name:          libtalloc
-Version:       2.3.1
+Version:       2.3.3
 Release:       1
 Summary:       A memory pool system
 License:       LGPLv3+
@@ -94,6 +94,9 @@ cp -a doc/man/* $RPM_BUILD_ROOT/%{_mandir}
 %ldconfig_scriptlets -n python3-talloc
 
 %changelog
+* Wed Nov 17 2021 Wenchao Hao <haowenchao@huawei.com> - 2.3.3-1
+- update to v2.3.3 version
+
 * Thu Jul 16 2020 Zhiqiang Liu <liuzhiqiang26@huawei.com> - 2.3.1-1
 - update to v2.3.1 version
 
